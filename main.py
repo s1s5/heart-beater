@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 async def ping(url, url_kwargs, ping_url):
-    timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=30),
+    timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=30)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, timeout=timeout, **url_kwargs) as res:
             if 200 <= res.status < 400:
