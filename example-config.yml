@@ -1,0 +1,6 @@
+- url: http://localhost:8888
+  timeout: 60
+  ping_url: http://localhost:8888
+- url: http://foo:bar@localhost:8889
+  timeout: 30
+  ping_url: http://localhost:8889
