@@ -19,8 +19,8 @@ async def ping(url, url_kwargs, ping_url):
                     logger.debug('[ping] %s status=%d', ping_url, ping_res.status)
 
 
-async def ping_forever(url, timeout, ping_url):
-    url_kwargs = {}
+async def ping_forever(url, timeout, ping_url, **url_kwargs):
+    url_kwargs = dict(**url_kwargs)
     try:
         p = urlparse(url)
         if '@' in p.netloc:
