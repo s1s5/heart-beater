@@ -53,30 +53,32 @@ async def ping_forever(url, ping_url, period, method='GET',
     # raise_for_status=None, read_until_eof=True, read_bufsize=None,
     # proxy_auth=None, timeout=None, ssl=None, verify_ssl=None,
     # fingerprint=None, ssl_context=None, proxy_headers=None):
-
-    request_kwargs = {}
-    url, request_kwargs['auth'] = split_auth_from_url(url)
-    request_kwargs['proxy'], request_kwargs['proxy_auth'] = split_auth_from_url(proxy)
-    request_kwargs['params'] = key_value_list_to_dict(params)
-    request_kwargs['headers'] = key_value_list_to_dict(headers)
-    if timeout:
-        if isinstance(timeout, (int, float)):
-            request_kwargs['timeout'] = timeout
+    try:
+        request_kwargs = {}
+        url, request_kwargs['auth'] = split_auth_from_url(url)
+        request_kwargs['proxy'], request_kwargs['proxy_auth'] = split_auth_from_url(proxy)
+        request_kwargs['params'] = key_value_list_to_dict(params)
+        request_kwargs['headers'] = key_value_list_to_dict(headers)
+        if timeout:
+            if isinstance(timeout, (int, float)):
+                request_kwargs['timeout'] = timeout
+            else:
+                # total=None, connect=None, sock_connect=None, sock_read=None
+                request_kwargs['timeout'] = aiohttp.ClientTimeout(**timeout)
         else:
-            # total=None, connect=None, sock_connect=None, sock_read=None
-            request_kwargs['timeout'] = aiohttp.ClientTimeout(**timeout)
-    else:
-        request_kwargs['timeout'] = default_timeout
+            request_kwargs['timeout'] = default_timeout
 
-    [request_kwargs.pop(x) for x in [key for key, value in request_kwargs.items() if value is None]]
-    logger.debug('url=%s, ping_url=%s, period=%s, request_kwargs=%s',
-                 url, ping_url, period, request_kwargs)
-    while True:
-        try:
-            await ping(method, url, request_kwargs, ping_url)
-        except Exception as e:
-            logger.exception('url=%s, exception=%s', url, e)
-        await asyncio.sleep(period)
+        [request_kwargs.pop(x) for x in [key for key, value in request_kwargs.items() if value is None]]
+        logger.debug('url=%s, ping_url=%s, period=%s, request_kwargs=%s',
+                     url, ping_url, period, request_kwargs)
+        while True:
+            try:
+                await ping(method, url, request_kwargs, ping_url)
+            except Exception as e:
+                logger.exception('url=%s, exception=%s', url, e)
+            await asyncio.sleep(period)
+    except Exception as e:
+        logger.exception('load settings failed, url=%s, exception=%s', url, e)
 
 
 async def main(config):
