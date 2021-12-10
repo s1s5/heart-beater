@@ -1,8 +1,9 @@
-- url: http://localhost:8888
-  timeout: 60
-  ping_url: http://localhost:8888
+- url: http://localhost:18888
+  period: 10
+  ping_url: http://localhost:18888
   headers:
-    Host: hello.foo.bar
+    - key: Host
+      value: hello.foo.bar
 - url: http://foo:bar@localhost:8889
-  timeout: 30
+  period: 5
   ping_url: http://localhost:8889
