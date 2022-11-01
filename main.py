@@ -99,6 +99,10 @@ async def ping_forever(
             period,
             request_kwargs,
         )
+
+        if cron:
+            await asyncio.sleep(cron_entry.next(default_utc=True))  # type: ignore
+
         while True:
             async with aiohttp.ClientSession() as session:
                 try:
