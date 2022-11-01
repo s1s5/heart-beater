@@ -6,7 +6,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         print(self.path)
         print(self.headers)
-        print(self.rfile.read())
+        length = int(self.headers.get('content-length', 0))
+        if length:
+            print(self.rfile.read(length))
+        # print(self.rfile.read())
 
         body = "hello"
         self.send_response(200)

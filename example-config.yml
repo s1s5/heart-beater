@@ -1,8 +1,14 @@
 - url: http://localhost:8888
-  timeout: 60
+  period: 10
   ping_url: http://localhost:8888
   headers:
-    Host: hello.foo.bar
+    - name: Host
+      value: hello.foo.bar
+  timeout:
+    total: 180
+    connect: 30
+    sock_connect: 30
+    sock_read: 120
 - url: http://foo:bar@localhost:8889
-  timeout: 30
+  period: 5
   ping_url: http://localhost:8889
