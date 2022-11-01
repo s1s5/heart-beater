@@ -10,5 +10,5 @@
     sock_connect: 30
     sock_read: 120
 - url: http://b
-  period: 5
+  cron: "* * * * *"
   ping_url: http://ping

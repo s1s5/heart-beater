@@ -21,6 +21,7 @@ isort = "^5.10.1"
 pre-commit = "^2.20.0"
 radon = "^5.1.0"
 mypy = "^0.982"
+types-pyyaml = "^6.0.12.1"
 
 [build-system]
 requires = ["poetry-core"]

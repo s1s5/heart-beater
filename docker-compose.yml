@@ -9,6 +9,8 @@ services:
       - main.py
       - -c
       - ./example-config.yml
+      - -l
+      - debug
     volumes:
       - .:/app
 

@@ -1,28 +1,26 @@
 import asyncio
 import logging
 import os
+from typing import Optional
 from urllib.parse import urlparse
 
 import aiohttp
 import yaml
+from crontab import CronTab
 
 logger = logging.getLogger(__name__)
-# logging.basicConfig(format='%(asctime)-15s %(message)s')
 default_timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=30)
 
 
-async def ping(method, url, request_kwargs, ping_url):
-    async with aiohttp.ClientSession() as session:
-        async with session.request(method, url, **request_kwargs) as res:
-            if 200 <= res.status < 400:
-                logger.debug("[test] %s status=%d", url, res.status)
-        async with session.get(ping_url, timeout=default_timeout) as ping_res:
-            logger.debug("[ping] %s status=%d", ping_url, ping_res.status)
+async def ping(session: aiohttp.ClientSession, method: str, url: str, request_kwargs):
+    async with session.request(method, url, **request_kwargs) as res:
+        logger.debug("[test] %s status=%d", url, res.status)
+        res.raise_for_status()
 
 
-def split_auth_from_url(url):
+def split_auth_from_url(url: Optional[str]):
     if not url:
-        return None, None
+        return url, None
 
     p = urlparse(url)
     if "@" in p.netloc:
@@ -45,7 +43,18 @@ def key_value_list_to_dict(kvl):
 
 
 async def ping_forever(
-    url, ping_url, period, method="GET", params=None, headers=None, proxy=None, timeout=None
+    *,
+    name=None,
+    url: str,
+    ping_url: str,
+    fail_ping_url: Optional[str] = None,
+    period: Optional[int] = None,
+    cron: Optional[str] = None,
+    method: str = "GET",
+    params=None,
+    headers=None,
+    proxy=None,
+    timeout=None
 ):
     # data=None, json=None, cookies=None,
     # skip_auto_headers=None, auth=None, allow_redirects=True,
@@ -53,9 +62,22 @@ async def ping_forever(
     # raise_for_status=None, read_until_eof=True, read_bufsize=None,
     # proxy_auth=None, timeout=None, ssl=None, verify_ssl=None,
     # fingerprint=None, ssl_context=None, proxy_headers=None):
+    name = name if name else ping_url
+    if ((not period) and (not cron)) or (period and cron):
+        logger.error("%s period or cron must be specified.", name)
+        return
+
+    if cron:
+        cron_entry = CronTab(cron)
+
+    def get_sleep_time() -> float:
+        if period:
+            return period
+        return cron_entry.next(default_utc=True)  # type: ignore
+
     try:
         request_kwargs = {}
-        url, request_kwargs["auth"] = split_auth_from_url(url)
+        url, request_kwargs["auth"] = split_auth_from_url(url)  # type: ignore
         request_kwargs["proxy"], request_kwargs["proxy_auth"] = split_auth_from_url(proxy)
         request_kwargs["params"] = key_value_list_to_dict(params)
         request_kwargs["headers"] = key_value_list_to_dict(headers)
@@ -70,16 +92,27 @@ async def ping_forever(
 
         [request_kwargs.pop(x) for x in [key for key, value in request_kwargs.items() if value is None]]
         logger.debug(
-            "url=%s, ping_url=%s, period=%s, request_kwargs=%s", url, ping_url, period, request_kwargs
+            "name=%s, url=%s, ping_url=%s, period=%s, request_kwargs=%s",
+            name,
+            url,
+            ping_url,
+            period,
+            request_kwargs,
         )
         while True:
-            try:
-                await ping(method, url, request_kwargs, ping_url)
-            except Exception as e:
-                logger.exception("url=%s, exception=%s", url, e)
-            await asyncio.sleep(period)
+            async with aiohttp.ClientSession() as session:
+                try:
+                    await ping(session, method, url, request_kwargs)
+                    async with session.get(ping_url, timeout=default_timeout) as ping_res:
+                        logger.debug("[ping] %s -> %s status=%d", name, ping_url, ping_res.status)
+                except Exception as e:
+                    if fail_ping_url:
+                        async with session.get(fail_ping_url, timeout=default_timeout) as ping_res:
+                            logger.debug("[failping] %s status=%d", fail_ping_url, ping_res.status)
+                    logger.exception("%s: url=%s, exception=%s", name, url, e)
+            await asyncio.sleep(get_sleep_time())
     except Exception as e:
-        logger.exception("load settings failed, url=%s, exception=%s", url, e)
+        logger.exception("%s load settings failed, url=%s, exception=%s", name, url, e)
 
 
 async def main(config):
