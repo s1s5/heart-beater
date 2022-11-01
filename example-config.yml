@@ -1,6 +1,6 @@
-- url: http://localhost:8888
+- url: http://a
   period: 10
-  ping_url: http://localhost:8888
+  ping_url: http://ping
   headers:
     - name: Host
       value: hello.foo.bar
@@ -9,6 +9,6 @@
     connect: 30
     sock_connect: 30
     sock_read: 120
-- url: http://foo:bar@localhost:8889
+- url: http://b
   period: 5
-  ping_url: http://localhost:8889
+  ping_url: http://ping
