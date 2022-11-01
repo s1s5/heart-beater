@@ -1,0 +1,67 @@
+[tool.poetry]
+name = "heart-beater"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "heart_beater"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = "^3.8.3"
+pyyaml = "^6.0"
+aiodns = "^3.0.0"
+crontab = "^0.23.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+flake8 = "^5.0.4"
+isort = "^5.10.1"
+pre-commit = "^2.20.0"
+radon = "^5.1.0"
+mypy = "^0.982"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.black]
+line-length = 110
+exclude = """
+/(\\.git/
+  |\\.eggs
+  |\\.hg
+  |__pycache__
+  |\\.cache
+  |\\.ipynb_checkpoints
+  |\\.mypy_cache
+  |\\.pytest_cache
+  |\\.tox
+  |\\.venv
+  |migrations
+)/
+"""
+
+[tool.mypy]
+namespace_packages = true
+ignore_missing_imports = true  # スタブがないライブラリを無視する
+
+
+[tool.isort]
+line_length = 110
+multi_line_output = 3
+include_trailing_comma = true
+profile = "black"
+extend_skip_glob = ["**/migrations/*.py"]
+
+[tool.flake8]
+max-line-length = 110
+max-complexity = 18
+extend-ignore = "E203,"  # blackと競合してる
+exclude = [
+"**/migrations/*.py"
+]
+radon-max-cc = 10
+

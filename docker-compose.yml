@@ -1,0 +1,22 @@
+version: "3.7"
+
+services:
+  heart-beater:
+    build:
+      context: .
+    command:
+      - python
+      - main.py
+      - -c
+      - ./example-config.yml
+    volumes:
+      - .:/app
+
+  a:
+    image: nginx
+
+  b:
+    image: nginx
+
+  ping:
+    image: nginx
